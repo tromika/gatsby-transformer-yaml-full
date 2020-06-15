@@ -27,6 +27,8 @@ exports.onCreateNode = async (helpers, { plugins }) => {
   } = helpers
 
   function linkNodes({ id, ...content }, parent, { type = '', index = 0 }) {
+    const options = getPluginOptions()
+    const overrideType = options.defaultSchema != '' ? `${options.defaultSchema} Yaml` : `${type} Yaml`
     const node = {
       ...content,
       id: id ? id : createNodeId(`${parent.id}:${index} >>> YAML`),
@@ -36,7 +38,7 @@ exports.onCreateNode = async (helpers, { plugins }) => {
 
     node.internal = {
       contentDigest: createContentDigest(node),
-      type: camelCase(`${type} Yaml`)
+      type: camelCase(overrideType)
     }
 
     createNode(node)
@@ -93,4 +95,24 @@ exports.onCreateNode = async (helpers, { plugins }) => {
     const resolvedContent = await resolveContent(parsedContent)
     linkNodes(resolvedContent, node, { type })
   }
+}
+
+const pluginDefaults = {
+  defaultSchema: '',
+}
+
+let pluginOptions = Object.assign({}, pluginDefaults)
+function setPluginOptions(opts) {
+  pluginOptions = Object.assign({}, pluginOptions, opts)
+
+  return pluginOptions
+}
+
+function getPluginOptions () {
+  return pluginOptions
+}
+
+
+exports.onPreInit = (_, pluginOptions) => {
+  setPluginOptions(pluginOptions)
 }
